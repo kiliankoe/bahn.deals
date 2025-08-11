@@ -59,34 +59,51 @@ const buildMenuItem = () => {
   btn.setAttribute('role', 'menuitem');
   btn.className = 'db-web-button test-db-web-button db-web-button--type-link db-web-button--size-large db-web-button--type-plain _list-button';
   
-  // Ensure proper padding to match native menu items
-  btn.style.padding = '12px 16px';
-  btn.style.width = '100%';
-  btn.style.textAlign = 'left';
+  // Apply proper styling to match native items
+  btn.style.cssText = `
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #282d37;
+    border-radius: 4px;
+    margin: 0;
+  `;
+  
+  // Add hover effect to match the native gray background
+  btn.addEventListener('mouseenter', () => {
+    btn.style.backgroundColor = '#f0f3f5';
+  });
+  btn.addEventListener('mouseleave', () => {
+    btn.style.backgroundColor = 'transparent';
+  });
 
   // Content wrapper
   const content = document.createElement('span');
   content.className = 'db-web-button__content';
+  content.style.cssText = 'display: flex; align-items: center; gap: 0.75rem; width: 100%;';
 
-  // Icon - using a simpler percentage/discount icon
+  // Icon - magnifying glass SVG in DB red color
   const icon = document.createElement('span');
   icon.setAttribute('aria-hidden', 'true');
-  icon.className = 'db-color--dbBrand db-web-icon--custom-size icon-action-shopping-tag db-web-icon db-web-button__icon db-web-button__prepend-icon test-button-prependicon db-web-button__icon--primary';
-  icon.style.setProperty('--334abfb0', '1.25rem');
-  icon.style.setProperty('--7c108f1c', '1.25rem');
-  icon.style.setProperty('--2c5586aa', 'initial');
-  
-  // If the icon class doesn't work, fallback to inline SVG
-  icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-    <line x1="7" y1="7" x2="7.01" y2="7"></line>
-    <path d="M14 10l-2 2m0-2l2 2" stroke="currentColor"/>
+  icon.style.cssText = 'display: flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; flex-shrink: 0;';
+  icon.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="8.5" cy="8.5" r="5.75" stroke="#EC0016" stroke-width="1.5"/>
+    <path d="M12.75 12.75L17 17" stroke="#EC0016" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`;
 
   // Label
   const label = document.createElement('span');
   label.className = 'db-web-button__label test-button-label';
   label.textContent = text;
+  label.style.cssText = 'color: #282d37; font-size: 1rem; font-weight: 400; line-height: 1.5;';
 
   // Assemble
   content.appendChild(icon);
