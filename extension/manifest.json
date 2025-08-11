@@ -18,10 +18,6 @@
     "https://app.vendo.noncd.db.de/*",
     "https://int.bahn.de/*"
   ],
-  "options_ui": {
-    "page": "pages/options.html",
-    "open_in_tab": true
-  },
   "content_scripts": [
     {
       "matches": [

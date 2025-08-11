@@ -64,6 +64,36 @@
       style="margin-top:8px; max-height: 180px; overflow:auto; border-top:1px solid #eee; padding-top:8px;"></div>
   </section>
   <section class="card">
+    <div style="margin-bottom:12px;">
+      <strong>Reiseoptionen</strong>
+      <div class="row" style="margin-top:8px;gap:16px;">
+        <div>
+          <label for="class-select" class="small muted">Klasse:</label>
+          <select id="class-select" style="margin-left:4px;">
+            <option value="2">2. Klasse</option>
+            <option value="1">1. Klasse</option>
+          </select>
+        </div>
+        <div>
+          <label for="age-input" class="small muted">Alter:</label>
+          <input type="number" id="age-input" min="0" max="120" value="30" style="width:50px;margin-left:4px;">
+        </div>
+        <div>
+          <label for="bahncard-select" class="small muted">BahnCard:</label>
+          <select id="bahncard-select" style="margin-left:4px;">
+            <option value="none">Keine</option>
+            <option value="bc25">BahnCard 25</option>
+            <option value="bc50">BahnCard 50</option>
+          </select>
+        </div>
+        <div>
+          <label class="small muted">
+            <input type="checkbox" id="dticket-check" style="margin-right:4px;">
+            Deutschlandticket
+          </label>
+        </div>
+      </div>
+    </div>
     <div class="row" style="justify-content:space-between;align-items:center;">
       <div><strong>Ergebnis</strong></div>
       <div><button id="run">Analyse starten</button></div>

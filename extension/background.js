@@ -39,8 +39,14 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     const progress = async (payload) => {
       try { await browser.runtime.sendMessage({ type: 'analysis-progress', ...payload }); } catch {}
     };
-    const { options } = await browser.storage.local.get('options');
-    const userOptions = { ...DEFAULT_OPTIONS, ...(options || {}) };
+    // Use options from message if provided, otherwise fall back to stored options
+    let userOptions;
+    if (msg.options) {
+      userOptions = { ...DEFAULT_OPTIONS, ...msg.options };
+    } else {
+      const { options } = await browser.storage.local.get('options');
+      userOptions = { ...DEFAULT_OPTIONS, ...(options || {}) };
+    }
     const entry = sessionStore.get(msg.token);
     if (!entry) return { ok: false, error: 'no-session' };
 

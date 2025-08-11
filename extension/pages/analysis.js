@@ -48,6 +48,51 @@ async function main() {
   const savingsEl = document.getElementById('savings');
   const chosenSegments = document.getElementById('chosen-segments');
   const chosenSegmentsList = document.getElementById('chosen-segments-list');
+  
+  // Option controls
+  const classSelect = document.getElementById('class-select');
+  const ageInput = document.getElementById('age-input');
+  const bahncardSelect = document.getElementById('bahncard-select');
+  const dticketCheck = document.getElementById('dticket-check');
+
+  // Load saved options
+  async function loadOptions() {
+    try {
+      const res = await EXT.runtime.sendMessage({ type: 'get-options' });
+      if (res?.options) {
+        if (classSelect) classSelect.value = res.options.class || '2';
+        if (ageInput) ageInput.value = res.options.age || 30;
+        if (bahncardSelect) bahncardSelect.value = res.options.bahncard || 'none';
+        if (dticketCheck) dticketCheck.checked = res.options.dticket || false;
+      }
+    } catch (e) {
+      console.error('Failed to load options:', e);
+    }
+  }
+
+  // Save options when changed
+  async function saveOptions() {
+    const options = {
+      class: classSelect?.value || '2',
+      age: parseInt(ageInput?.value || '30', 10),
+      bahncard: bahncardSelect?.value || 'none',
+      dticket: dticketCheck?.checked || false
+    };
+    try {
+      await EXT.runtime.sendMessage({ type: 'set-options', options });
+    } catch (e) {
+      console.error('Failed to save options:', e);
+    }
+  }
+
+  // Attach change listeners
+  if (classSelect) classSelect.addEventListener('change', saveOptions);
+  if (ageInput) ageInput.addEventListener('change', saveOptions);
+  if (bahncardSelect) bahncardSelect.addEventListener('change', saveOptions);
+  if (dticketCheck) dticketCheck.addEventListener('change', saveOptions);
+
+  // Load options on page load
+  loadOptions();
 
   const log = (line) => {
     if (!progressLog) return;
@@ -79,8 +124,17 @@ async function main() {
     }
     if (result) result.textContent = 'Analysiere …';
     if (progressLog) progressLog.textContent = '';
+    
+    // Get current options from form
+    const currentOptions = {
+      class: classSelect?.value || '2',
+      age: parseInt(ageInput?.value || '30', 10),
+      bahncard: bahncardSelect?.value || 'none',
+      dticket: dticketCheck?.checked || false
+    };
+    
     try {
-      const res = await EXT.runtime.sendMessage({ type: 'start-analysis', token });
+      const res = await EXT.runtime.sendMessage({ type: 'start-analysis', token, options: currentOptions });
       if (!res?.ok) {
         if (result) result.textContent = 'Fehler beim Starten der Analyse.' + (res?.error ? `\n${res.error}` : '');
       } else {
