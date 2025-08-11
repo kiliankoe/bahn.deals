@@ -64,7 +64,8 @@ async function main() {
     else if (msg.phase === 'route-parsed') log(`Route parsed: ${msg.nodes} Halte`);
     else if (msg.phase === 'segments-start') log(`Pricing ${msg.total} segments (nodes ${msg.totalNodes})…`);
     else if (msg.phase === 'segment-pricing') log(`Pricing ${msg.fromIdx}→${msg.toIdx} (${msg.fromEva}→${msg.toEva})…`);
-    else if (msg.phase === 'segment-priced') log(`${msg.fromIdx}→${msg.toIdx} ${msg.ok ? 'ok' : 'fail'}` + (msg.error ? ` (${msg.error})` : ''));
+    else if (msg.phase === 'segment-priced') log(`${msg.fromIdx}→${msg.toIdx} ${msg.ok ? 'ok' : 'fail'}` + (msg.error ? ` (${msg.error})` : '') + (msg.attempts > 1 ? ` [${msg.attempts} attempts]` : ''));
+    else if (msg.phase === 'segment-retry') log(`${msg.fromIdx}→${msg.toIdx} retry ${msg.attempt} in ${msg.nextAttemptIn}ms: ${msg.error}`);
     else if (msg.phase === 'segments-progress') log(`Progress: ${msg.done}/${msg.total} segments (${Math.round(msg.done/msg.total*100)}%)`);
     else if (msg.phase === 'segments-done') log(`Segments done: ${msg.produced}/${msg.total}`);
     else if (msg.phase === 'dp-start') log(`Computing best split from ${msg.validSegments} valid segments…`);
@@ -84,21 +85,21 @@ async function main() {
         if (result) result.textContent = 'Fehler beim Starten der Analyse.' + (res?.error ? `\n${res.error}` : '');
       } else {
         if (result) result.textContent = JSON.stringify(res.summary, null, 2);
-        
+
         // Render summary banner
         const ti = res.summary?.ticketsInfo;
         const split = res.summary?.split;
         const route = res.summary?.route;
-        
+
         if (split && ti?.bestOffer && !split.error) {
           const originalAmount = ti.bestOffer.amount;
           const splitAmount = split.total;
           const savings = originalAmount - splitAmount;
           const savingsPercent = originalAmount > 0 ? (savings / originalAmount * 100) : 0;
-          
+
           originalPrice.textContent = `${originalAmount.toFixed(2)} ${ti.bestOffer.currency}`;
           bestSplitPrice.textContent = `${splitAmount.toFixed(2)} ${split.currency}`;
-          
+
           if (savings > 0.01) {
             savingsEl.textContent = `${savings.toFixed(2)} ${ti.bestOffer.currency} (${savingsPercent.toFixed(1)}%)`;
             savingsEl.style.color = '#28a745';
@@ -109,7 +110,7 @@ async function main() {
             savingsEl.textContent = 'Kein Unterschied';
             savingsEl.style.color = '#6c757d';
           }
-          
+
           // Show chosen segments
           if (Array.isArray(split.segments) && split.segments.length && route?.nodes) {
             const segmentTexts = [];
@@ -125,7 +126,7 @@ async function main() {
           } else {
             chosenSegments.style.display = 'none';
           }
-          
+
           summaryBanner.style.display = '';
         } else if (split?.error && ti?.bestOffer) {
           // Show error state in summary banner
@@ -138,7 +139,7 @@ async function main() {
         } else {
           summaryBanner.style.display = 'none';
         }
-        
+
         // Render offers if present
         if (ti && ti.bestOffer) {
           bestText.textContent = `${ti.bestOffer.name} – ${ti.bestOffer.amount.toFixed(2)} ${ti.bestOffer.currency}`;
@@ -157,19 +158,75 @@ async function main() {
         } else {
           offersWrap.style.display = 'none';
         }
-        // Render segments (subset)
+        // Render segments (improved display)
         const segs = res.summary?.segments;
         if (Array.isArray(segs) && segs.length) {
           segmentsUl.innerHTML = '';
-          for (const s of segs) {
-            if (!s?.bestOffer) continue;
-            const li = document.createElement('li');
-            const from = s.from?.name || s.from?.eva || '?';
-            const to = s.to?.name || s.to?.eva || '?';
-            li.textContent = `${from} → ${to} – ${s.bestOffer.amount.toFixed(2)} ${s.bestOffer.currency}`;
-            segmentsUl.appendChild(li);
+
+          // Filter and sort segments by price
+          const validSegments = segs
+            .filter(s => s?.bestOffer?.amount != null)
+            .sort((a, b) => a.bestOffer.amount - b.bestOffer.amount);
+
+          if (validSegments.length > 0) {
+            // Group segments by origin station
+            const groupedSegments = new Map();
+            validSegments.forEach(s => {
+              const fromName = s.from?.name || s.from?.eva || '?';
+              if (!groupedSegments.has(fromName)) {
+                groupedSegments.set(fromName, []);
+              }
+              groupedSegments.get(fromName).push(s);
+            });
+
+            // Create sections for each origin
+            let totalShown = 0;
+            const maxSegmentsPerOrigin = 5;
+            const maxTotalSegments = 15;
+
+            for (const [fromName, segmentGroup] of groupedSegments) {
+              if (totalShown >= maxTotalSegments) break;
+
+              // Add origin header
+              const headerLi = document.createElement('li');
+              headerLi.style.cssText = 'font-weight: 600; margin-top: 8px; margin-bottom: 4px; color: #333; list-style: none;';
+              headerLi.textContent = `Von ${fromName}:`;
+              segmentsUl.appendChild(headerLi);
+
+              // Add segments for this origin (sorted by price, limited)
+              const segmentsToShow = segmentGroup
+                .slice(0, Math.min(maxSegmentsPerOrigin, maxTotalSegments - totalShown));
+
+              segmentsToShow.forEach(s => {
+                const li = document.createElement('li');
+                li.style.cssText = 'margin-left: 16px; margin-bottom: 2px;';
+                const to = s.to?.name || s.to?.eva || '?';
+                li.textContent = `→ ${to} – ${s.bestOffer.amount.toFixed(2)} ${s.bestOffer.currency}`;
+                segmentsUl.appendChild(li);
+                totalShown++;
+              });
+
+              // Show how many more segments are available for this origin
+              if (segmentGroup.length > segmentsToShow.length) {
+                const moreLi = document.createElement('li');
+                moreLi.style.cssText = 'margin-left: 16px; font-size: 11px; color: #999; font-style: italic;';
+                moreLi.textContent = `… und ${segmentGroup.length - segmentsToShow.length} weitere`;
+                segmentsUl.appendChild(moreLi);
+              }
+            }
+
+            // Show total count
+            if (validSegments.length > totalShown) {
+              const summaryLi = document.createElement('li');
+              summaryLi.style.cssText = 'margin-top: 8px; font-size: 11px; color: #666; font-style: italic; list-style: none;';
+              summaryLi.textContent = `Zeige ${totalShown} von ${validSegments.length} verfügbaren Segmenten (sortiert nach Preis)`;
+              segmentsUl.appendChild(summaryLi);
+            }
+
+            segmentsWrap.style.display = '';
+          } else {
+            segmentsWrap.style.display = 'none';
           }
-          segmentsWrap.style.display = '';
         } else {
           segmentsWrap.style.display = 'none';
         }

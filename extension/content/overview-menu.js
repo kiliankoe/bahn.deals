@@ -47,34 +47,54 @@ const buildMenuItem = () => {
   const isDe = lang.startsWith('de');
   const text = isDe ? 'Günstigste Aufteilung suchen' : 'Find cheapest split';
 
+  // Create list item - match the exact structure of native items
   const li = document.createElement('li');
   li.className = '_content-button _content-button--with-icons';
   li.setAttribute('data-bahn-deals', '1');
+  li.setAttribute('role', 'none');
 
+  // Create button
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.setAttribute('role', 'menuitem');
   btn.className = 'db-web-button test-db-web-button db-web-button--type-link db-web-button--size-large db-web-button--type-plain _list-button';
+  
+  // Ensure proper padding to match native menu items
+  btn.style.padding = '12px 16px';
+  btn.style.width = '100%';
+  btn.style.textAlign = 'left';
 
+  // Content wrapper
   const content = document.createElement('span');
   content.className = 'db-web-button__content';
 
+  // Icon - using a simpler percentage/discount icon
   const icon = document.createElement('span');
   icon.setAttribute('aria-hidden', 'true');
-  icon.className = 'db-color--dbBrand db-web-icon--custom-size icon-action-share db-web-icon db-web-button__icon db-web-button__prepend-icon test-button-prependicon db-web-button__icon--primary';
+  icon.className = 'db-color--dbBrand db-web-icon--custom-size icon-action-shopping-tag db-web-icon db-web-button__icon db-web-button__prepend-icon test-button-prependicon db-web-button__icon--primary';
   icon.style.setProperty('--334abfb0', '1.25rem');
   icon.style.setProperty('--7c108f1c', '1.25rem');
   icon.style.setProperty('--2c5586aa', 'initial');
+  
+  // If the icon class doesn't work, fallback to inline SVG
+  icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+    <path d="M14 10l-2 2m0-2l2 2" stroke="currentColor"/>
+  </svg>`;
 
+  // Label
   const label = document.createElement('span');
   label.className = 'db-web-button__label test-button-label';
   label.textContent = text;
 
+  // Assemble
   content.appendChild(icon);
   content.appendChild(label);
   btn.appendChild(content);
   li.appendChild(btn);
 
+  // Add the menuslot div that native items have
   const slot = document.createElement('div');
   slot.className = '_menuslot';
   li.appendChild(slot);

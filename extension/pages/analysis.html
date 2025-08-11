@@ -1,74 +1,112 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>bahn.deals – Analyse</title>
-    <style>
-      body { font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; color: #111; }
-      header { margin-bottom: 12px; }
-      .muted { color: #666; }
-      .card { border: 1px solid #e1e1e1; border-radius: 8px; padding: 12px; margin: 12px 0; }
-      .row { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
-      .route { font-weight: 600; }
-      .lines { color: #333; }
-      .progress { margin: 8px 0; }
-      .small { font-size: 12px; }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div class="route" id="route">Analyse</div>
-      <div class="muted small" id="meta"></div>
-    </header>
-    <section class="card">
-      <div class="progress" id="progress">Warte auf Verbindungsdaten …</div>
-      <div id="details" class="small"></div>
-      <div id="progress-log" class="small" style="margin-top:8px; max-height: 180px; overflow:auto; border-top:1px solid #eee; padding-top:8px;"></div>
-    </section>
-    <section class="card">
-      <div class="row" style="justify-content:space-between;align-items:center;">
-        <div><strong>Ergebnis</strong> <span class="muted small">(Prototyp)</span></div>
-        <div><button id="run">Analyse starten</button></div>
-      </div>
-      <div id="summary-banner" class="card" style="background:#f0f8ff;border-color:#4a90e2;display:none;margin:12px 0;">
-        <div style="margin-bottom:8px;"><strong>Aufteilungsanalyse</strong></div>
-        <div class="row" style="gap:24px;flex-wrap:wrap;">
-          <div>
-            <div class="small muted">Originalpreis:</div>
-            <div id="original-price" style="font-weight:600;">-</div>
-          </div>
-          <div>
-            <div class="small muted">Beste Aufteilung:</div>
-            <div id="best-split-price" style="font-weight:600;">-</div>
-          </div>
-          <div>
-            <div class="small muted">Ersparnis:</div>
-            <div id="savings" style="font-weight:600;color:#28a745;">-</div>
-          </div>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>bahn.deals – Analyse</title>
+  <style>
+    body {
+      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 16px;
+      color: #111;
+    }
+
+    header {
+      margin-bottom: 12px;
+    }
+
+    .muted {
+      color: #666;
+    }
+
+    .card {
+      border: 1px solid #e1e1e1;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .route {
+      font-weight: 600;
+    }
+
+    .lines {
+      color: #333;
+    }
+
+    .progress {
+      margin: 8px 0;
+    }
+
+    .small {
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="route" id="route">Analyse</div>
+    <div class="muted small" id="meta"></div>
+  </header>
+  <section class="card">
+    <div class="progress" id="progress">Warte auf Verbindungsdaten …</div>
+    <div id="details" class="small"></div>
+    <div id="progress-log" class="small"
+      style="margin-top:8px; max-height: 180px; overflow:auto; border-top:1px solid #eee; padding-top:8px;"></div>
+  </section>
+  <section class="card">
+    <div class="row" style="justify-content:space-between;align-items:center;">
+      <div><strong>Ergebnis</strong></div>
+      <div><button id="run">Analyse starten</button></div>
+    </div>
+    <div id="summary-banner" class="card" style="background:#f0f8ff;border-color:#4a90e2;display:none;margin:12px 0;">
+      <div style="margin-bottom:8px;"><strong>Aufteilungsanalyse</strong></div>
+      <div class="row" style="gap:24px;flex-wrap:wrap;">
+        <div>
+          <div class="small muted">Originalpreis:</div>
+          <div id="original-price" style="font-weight:600;">-</div>
         </div>
-        <div id="chosen-segments" style="margin-top:8px;display:none;">
-          <div class="small muted" style="margin-bottom:4px;">Gewählte Segmente:</div>
-          <div id="chosen-segments-list" class="small"></div>
+        <div>
+          <div class="small muted">Beste Aufteilung:</div>
+          <div id="best-split-price" style="font-weight:600;">-</div>
+        </div>
+        <div>
+          <div class="small muted">Ersparnis:</div>
+          <div id="savings" style="font-weight:600;color:#28a745;">-</div>
         </div>
       </div>
-      <div id="best-offer" class="row" style="gap:16px;align-items:center;display:none;">
-        <div><strong>Günstigstes Angebot:</strong></div>
-        <div id="best-offer-text"></div>
+      <div id="chosen-segments" style="margin-top:8px;display:none;">
+        <div class="small muted" style="margin-bottom:4px;">Gewählte Segmente:</div>
+        <div id="chosen-segments-list" class="small"></div>
       </div>
-      <div id="offers-list" style="margin-top:8px;display:none;">
-        <div class="small muted" style="margin-bottom:4px;">Weitere Angebote:</div>
-        <ul id="offers"></ul>
-      </div>
-      <div id="segments-list" style="margin-top:12px;display:none;">
-        <div class="small muted" style="margin-bottom:4px;">Segmentpreise (Auszug):</div>
-        <ul id="segments"></ul>
-      </div>
-      <details style="margin-top:8px;">
-        <summary class="small">Rohdaten</summary>
-        <pre id="result" class="small" style="white-space:pre-wrap"></pre>
-      </details>
-    </section>
-    <script src="analysis.js"></script>
-  </body>
-  </html>
+    </div>
+    <div id="best-offer" class="row" style="gap:16px;align-items:center;display:none;">
+      <div><strong>Günstigstes Angebot:</strong></div>
+      <div id="best-offer-text"></div>
+    </div>
+    <div id="offers-list" style="margin-top:8px;display:none;">
+      <div class="small muted" style="margin-bottom:4px;">Weitere Angebote:</div>
+      <ul id="offers"></ul>
+    </div>
+    <div id="segments-list" style="margin-top:12px;display:none;">
+      <div class="small muted" style="margin-bottom:4px;">Verfügbare Segmentpreise:</div>
+      <ul id="segments"></ul>
+    </div>
+    <details style="margin-top:8px;">
+      <summary class="small">Rohdaten</summary>
+      <pre id="result" class="small" style="white-space:pre-wrap"></pre>
+    </details>
+  </section>
+  <script src="analysis.js"></script>
+</body>
+
+</html>

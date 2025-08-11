@@ -170,73 +170,91 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         }
         return seq;
       };
-      const priceOne = async (fromIdx, toIdx) => {
-        try {
-          const fromNode = route?.nodes?.[fromIdx];
-          const toNode = route?.nodes?.[toIdx];
-          if (!fromNode || !toNode) return null;
-          if (!fromNode.dep) return null; // need a departure time
-          // Use precise dep from route
-          const depDT = fromNode.dep; // ISO string from API
-          await progress({ phase: 'segment-pricing', fromIdx, toIdx, fromEva: fromNode.eva, toEva: toNode.eva });
-          // Price segment with strict route match
-          const j2 = await self.DBNavLite.dbnavJourneys({ fromEva: fromNode.eva, toEva: toNode.eva, depDateTime: depDT, opts: userOptions });
-          const expectedSeq = expectedTrainSeqBetween(fromIdx, toIdx);
-          let picked = null;
-          const candList = Array.isArray(j2?.verbindungen) ? j2.verbindungen : [];
-          for (let ci = 0; ci < Math.min(3, candList.length); ci++) {
-            const vb = candList[ci]?.verbindung;
-            if (!vb) continue;
-            const secs = vb?.verbindungsAbschnitte || [];
-            const seq = [];
-            for (const s of secs) {
-              if (s?.typ !== 'FAHRZEUG') continue;
-              const lab = (s.mitteltext || s.langtext || s.kurztext || s.risZuglaufId || s.zuglaufId || '').trim();
-              if (!seq.length || seq[seq.length - 1] !== lab) seq.push(lab);
+      const priceOne = async (fromIdx, toIdx, retries = 3) => {
+        const executeWithRetry = async (attempt = 1) => {
+          try {
+            const fromNode = route?.nodes?.[fromIdx];
+            const toNode = route?.nodes?.[toIdx];
+            if (!fromNode || !toNode) return null;
+            if (!fromNode.dep) return null; // need a departure time
+            // Use precise dep from route
+            const depDT = fromNode.dep; // ISO string from API
+            await progress({ phase: 'segment-pricing', fromIdx, toIdx, fromEva: fromNode.eva, toEva: toNode.eva, attempt });
+            
+            // Price segment with strict route match
+            const j2 = await self.DBNavLite.dbnavJourneys({ fromEva: fromNode.eva, toEva: toNode.eva, depDateTime: depDT, opts: userOptions });
+            const expectedSeq = expectedTrainSeqBetween(fromIdx, toIdx);
+            let picked = null;
+            const candList = Array.isArray(j2?.verbindungen) ? j2.verbindungen : [];
+            for (let ci = 0; ci < Math.min(3, candList.length); ci++) {
+              const vb = candList[ci]?.verbindung;
+              if (!vb) continue;
+              const secs = vb?.verbindungsAbschnitte || [];
+              const seq = [];
+              for (const s of secs) {
+                if (s?.typ !== 'FAHRZEUG') continue;
+                const lab = (s.mitteltext || s.langtext || s.kurztext || s.risZuglaufId || s.zuglaufId || '').trim();
+                if (!seq.length || seq[seq.length - 1] !== lab) seq.push(lab);
+              }
+              const equal = seq.length === expectedSeq.length && seq.every((v, idx) => v === expectedSeq[idx]);
+              if (equal && vb.kontext) { picked = vb; break; }
             }
-            const equal = seq.length === expectedSeq.length && seq.every((v, idx) => v === expectedSeq[idx]);
-            if (equal && vb.kontext) { picked = vb; break; }
-          }
-          if (!picked) return { fromIdx, toIdx, error: 'route-mismatch' };
-          const recon2 = await self.DBNavLite.dbnavRefreshTickets({ refreshToken: picked.kontext, opts: userOptions });
-          // parse offers like above
-          const offers2 = [];
-          const walk2 = (obj) => {
-            if (!obj) return;
-            const clusters = obj.angebotsCluster || [];
-            for (const cl of clusters) {
-              const subs = cl.angebotsSubCluster || [];
-              for (const sub of subs) {
-                const pos = sub.angebotsPositionen || [];
-                for (const p of pos) {
-                  const ef = p.einfacheFahrt?.standard?.reisePosition?.reisePosition;
-                  const preis = ef?.preis;
-                  if (preis && typeof preis.betrag === 'number') {
-                    offers2.push({
-                      name: ef?.name || 'Angebot',
-                      amount: preis.betrag,
-                      currency: preis.waehrung || 'EUR',
-                    });
+            if (!picked) return { fromIdx, toIdx, error: 'route-mismatch' };
+            
+            const recon2 = await self.DBNavLite.dbnavRefreshTickets({ refreshToken: picked.kontext, opts: userOptions });
+            // parse offers like above
+            const offers2 = [];
+            const walk2 = (obj) => {
+              if (!obj) return;
+              const clusters = obj.angebotsCluster || [];
+              for (const cl of clusters) {
+                const subs = cl.angebotsSubCluster || [];
+                for (const sub of subs) {
+                  const pos = sub.angebotsPositionen || [];
+                  for (const p of pos) {
+                    const ef = p.einfacheFahrt?.standard?.reisePosition?.reisePosition;
+                    const preis = ef?.preis;
+                    if (preis && typeof preis.betrag === 'number') {
+                      offers2.push({
+                        name: ef?.name || 'Angebot',
+                        amount: preis.betrag,
+                        currency: preis.waehrung || 'EUR',
+                      });
+                    }
                   }
                 }
               }
+            };
+            walk2(recon2?.angebote || {});
+            const best2 = offers2.length ? offers2.reduce((a,b)=> (a.amount <= b.amount ? a : b)) : null;
+            const result = {
+              fromIdx, toIdx,
+              from: { eva: fromNode.eva, name: fromNode.name },
+              to: { eva: toNode.eva, name: toNode.name },
+              bestOffer: best2,
+              offersCount: offers2.length,
+              attempts: attempt,
+            };
+            await progress({ phase: 'segment-priced', fromIdx, toIdx, ok: !!best2, attempts: attempt });
+            return result;
+          } catch (e) {
+            const isRetryableError = e?.message?.includes?.('rate limit') || e?.message?.includes?.('timeout') || e?.message?.includes?.('network') || e?.status >= 500;
+            
+            if (attempt < retries && isRetryableError) {
+              // Exponential backoff: 1s, 2s, 4s, etc.
+              const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+              console.warn(`[segments] pricing ${fromIdx}->${toIdx} failed (attempt ${attempt}/${retries}), retrying in ${backoffMs}ms:`, e?.message || e);
+              await progress({ phase: 'segment-retry', fromIdx, toIdx, attempt, nextAttemptIn: backoffMs, error: String(e?.message || e) });
+              await new Promise(res => setTimeout(res, backoffMs));
+              return executeWithRetry(attempt + 1);
+            } else {
+              await progress({ phase: 'segment-priced', fromIdx, toIdx, ok: false, error: String(e?.message || e), attempts: attempt });
+              return { fromIdx, toIdx, error: String(e?.message || e), attempts: attempt };
             }
-          };
-          walk2(recon2?.angebote || {});
-          const best2 = offers2.length ? offers2.reduce((a,b)=> (a.amount <= b.amount ? a : b)) : null;
-          const result = {
-            fromIdx, toIdx,
-            from: { eva: fromNode.eva, name: fromNode.name },
-            to: { eva: toNode.eva, name: toNode.name },
-            bestOffer: best2,
-            offersCount: offers2.length,
-          };
-          await progress({ phase: 'segment-priced', fromIdx, toIdx, ok: !!best2 });
-          return result;
-        } catch (e) {
-          await progress({ phase: 'segment-priced', fromIdx, toIdx, ok: false, error: String(e?.message || e) });
-          return { fromIdx, toIdx, error: String(e?.message || e) };
-        }
+          }
+        };
+        
+        return executeWithRetry();
       };
       try {
         const n = route?.nodes?.length || 0;
@@ -247,8 +265,8 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
           for (let j = i + 1; j < n; j++) tasks.push([i, j]);
         }
         let done = 0;
-        const concurrency = 3; // Increased for better throughput
-        const throttleMs = 100; // Reduced throttle for faster processing
+        const concurrency = 2; // Reduced to avoid rate limiting
+        const throttleMs = 500; // Increased throttle for better stability
         const runNext = async () => {
           while (tasks.length > 0) {
             const t = tasks.shift();
