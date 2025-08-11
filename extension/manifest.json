@@ -1,0 +1,34 @@
+{
+  "manifest_version": 2,
+  "name": "bahn.deals",
+  "version": "0.1.0",
+  "description": "Find cheaper split-ticket combinations for DB journeys.",
+  "browser_action": {
+    "default_title": "bahn.deals",
+    "default_popup": "pages/popup.html"
+  },
+  "background": {
+    "scripts": ["bg/dbnav-lite.js", "background.js"],
+    "persistent": true
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "https://www.bahn.de/*",
+    "https://app.vendo.noncd.db.de/*",
+    "https://int.bahn.de/*"
+  ],
+  "options_ui": {
+    "page": "pages/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.bahn.de/buchung/fahrplan/suche*"
+      ],
+      "js": ["content/overview-menu.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

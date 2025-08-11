@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>bahn.deals – Optionen</title>
+    <style>
+      body { font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; color: #111; }
+      fieldset { border: 1px solid #e1e1e1; border-radius: 8px; padding: 12px; margin: 12px 0; }
+      label { display: block; margin: 8px 0 4px; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; }
+      select, input[type="number"], input[type="checkbox"] { padding: 6px; }
+      .actions { margin-top: 12px; }
+      button { padding: 8px 12px; }
+    </style>
+  </head>
+  <body>
+    <h1 style="font-size:18px;margin:0 0 8px;">Optionen</h1>
+    <p>Standardwerte für Analyse und Preisermittlung.</p>
+
+    <form id="form">
+      <fieldset>
+        <legend>Reise</legend>
+        <label>
+          Klasse
+          <select id="class">
+            <option value="2">2. Klasse</option>
+            <option value="1">1. Klasse</option>
+          </select>
+        </label>
+        <label>
+          Alter (Jahre)
+          <input id="age" type="number" min="0" max="120" step="1" placeholder="z.B. 30" />
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Rabatte</legend>
+        <label>
+          BahnCard
+          <select id="bahncard">
+            <option value="none">Keine</option>
+            <option value="bc25">BahnCard 25</option>
+            <option value="bc50">BahnCard 50</option>
+          </select>
+        </label>
+        <label>
+          <input id="dticket" type="checkbox" /> Deutschlandticket vorhanden
+        </label>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit">Speichern</button>
+        <span id="status" style="margin-left:10px;color:#0a0;display:none;">Gespeichert</span>
+      </div>
+    </form>
+
+    <script src="options.js"></script>
+  </body>
+  </html>
+
