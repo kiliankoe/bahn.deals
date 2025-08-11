@@ -31,6 +31,27 @@
         <div><strong>Ergebnis</strong> <span class="muted small">(Prototyp)</span></div>
         <div><button id="run">Analyse starten</button></div>
       </div>
+      <div id="summary-banner" class="card" style="background:#f0f8ff;border-color:#4a90e2;display:none;margin:12px 0;">
+        <div style="margin-bottom:8px;"><strong>Aufteilungsanalyse</strong></div>
+        <div class="row" style="gap:24px;flex-wrap:wrap;">
+          <div>
+            <div class="small muted">Originalpreis:</div>
+            <div id="original-price" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="small muted">Beste Aufteilung:</div>
+            <div id="best-split-price" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="small muted">Ersparnis:</div>
+            <div id="savings" style="font-weight:600;color:#28a745;">-</div>
+          </div>
+        </div>
+        <div id="chosen-segments" style="margin-top:8px;display:none;">
+          <div class="small muted" style="margin-bottom:4px;">Gewählte Segmente:</div>
+          <div id="chosen-segments-list" class="small"></div>
+        </div>
+      </div>
       <div id="best-offer" class="row" style="gap:16px;align-items:center;display:none;">
         <div><strong>Günstigstes Angebot:</strong></div>
         <div id="best-offer-text"></div>

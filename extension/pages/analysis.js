@@ -42,6 +42,12 @@ async function main() {
   const segmentsWrap = document.getElementById('segments-list');
   const segmentsUl = document.getElementById('segments');
   const progressLog = document.getElementById('progress-log');
+  const summaryBanner = document.getElementById('summary-banner');
+  const originalPrice = document.getElementById('original-price');
+  const bestSplitPrice = document.getElementById('best-split-price');
+  const savingsEl = document.getElementById('savings');
+  const chosenSegments = document.getElementById('chosen-segments');
+  const chosenSegmentsList = document.getElementById('chosen-segments-list');
 
   const log = (line) => {
     if (!progressLog) return;
@@ -56,10 +62,14 @@ async function main() {
     if (msg.phase === 'init') log(`Init: EVA ${msg.fromEva} → ${msg.toEva} @ ${msg.depDateTime}`);
     else if (msg.phase === 'journeys-fetched') log(`Found ${msg.journeysCount} journeys`);
     else if (msg.phase === 'route-parsed') log(`Route parsed: ${msg.nodes} Halte`);
-    else if (msg.phase === 'segments-start') log(`Pricing segments (cap ${msg.cap}, nodes ${msg.totalNodes})…`);
+    else if (msg.phase === 'segments-start') log(`Pricing ${msg.total} segments (nodes ${msg.totalNodes})…`);
     else if (msg.phase === 'segment-pricing') log(`Pricing ${msg.fromIdx}→${msg.toIdx} (${msg.fromEva}→${msg.toEva})…`);
     else if (msg.phase === 'segment-priced') log(`${msg.fromIdx}→${msg.toIdx} ${msg.ok ? 'ok' : 'fail'}` + (msg.error ? ` (${msg.error})` : ''));
-    else if (msg.phase === 'segments-done') log(`Segments done: ${msg.produced}`);
+    else if (msg.phase === 'segments-progress') log(`Progress: ${msg.done}/${msg.total} segments (${Math.round(msg.done/msg.total*100)}%)`);
+    else if (msg.phase === 'segments-done') log(`Segments done: ${msg.produced}/${msg.total}`);
+    else if (msg.phase === 'dp-start') log(`Computing best split from ${msg.validSegments} valid segments…`);
+    else if (msg.phase === 'dp-done' && !msg.error) log(`Best split found: ${msg.segmentsUsed} segments, total ${msg.totalCost.toFixed(2)} EUR`);
+    else if (msg.phase === 'dp-done' && msg.error) log(`DP optimization failed: ${msg.error}`);
   });
   if (runBtn) runBtn.addEventListener('click', async () => {
     if (!EXT?.runtime?.sendMessage) {
@@ -74,8 +84,62 @@ async function main() {
         if (result) result.textContent = 'Fehler beim Starten der Analyse.' + (res?.error ? `\n${res.error}` : '');
       } else {
         if (result) result.textContent = JSON.stringify(res.summary, null, 2);
-        // Render offers if present
+        
+        // Render summary banner
         const ti = res.summary?.ticketsInfo;
+        const split = res.summary?.split;
+        const route = res.summary?.route;
+        
+        if (split && ti?.bestOffer && !split.error) {
+          const originalAmount = ti.bestOffer.amount;
+          const splitAmount = split.total;
+          const savings = originalAmount - splitAmount;
+          const savingsPercent = originalAmount > 0 ? (savings / originalAmount * 100) : 0;
+          
+          originalPrice.textContent = `${originalAmount.toFixed(2)} ${ti.bestOffer.currency}`;
+          bestSplitPrice.textContent = `${splitAmount.toFixed(2)} ${split.currency}`;
+          
+          if (savings > 0.01) {
+            savingsEl.textContent = `${savings.toFixed(2)} ${ti.bestOffer.currency} (${savingsPercent.toFixed(1)}%)`;
+            savingsEl.style.color = '#28a745';
+          } else if (savings < -0.01) {
+            savingsEl.textContent = `+${Math.abs(savings).toFixed(2)} ${ti.bestOffer.currency} (${Math.abs(savingsPercent).toFixed(1)}%)`;
+            savingsEl.style.color = '#dc3545';
+          } else {
+            savingsEl.textContent = 'Kein Unterschied';
+            savingsEl.style.color = '#6c757d';
+          }
+          
+          // Show chosen segments
+          if (Array.isArray(split.segments) && split.segments.length && route?.nodes) {
+            const segmentTexts = [];
+            for (const seg of split.segments) {
+              const fromNode = route.nodes[seg.fromIdx];
+              const toNode = route.nodes[seg.toIdx];
+              const fromName = fromNode?.name || fromNode?.eva || '?';
+              const toName = toNode?.name || toNode?.eva || '?';
+              segmentTexts.push(`${fromName} → ${toName} (${seg.amount.toFixed(2)} ${seg.currency})`);
+            }
+            chosenSegmentsList.textContent = segmentTexts.join(' + ');
+            chosenSegments.style.display = '';
+          } else {
+            chosenSegments.style.display = 'none';
+          }
+          
+          summaryBanner.style.display = '';
+        } else if (split?.error && ti?.bestOffer) {
+          // Show error state in summary banner
+          originalPrice.textContent = `${ti.bestOffer.amount.toFixed(2)} ${ti.bestOffer.currency}`;
+          bestSplitPrice.textContent = 'Fehler';
+          savingsEl.textContent = split.error === 'no-path-found' ? 'Keine vollständige Aufteilung möglich' : `Fehler: ${split.error}`;
+          savingsEl.style.color = '#dc3545';
+          chosenSegments.style.display = 'none';
+          summaryBanner.style.display = '';
+        } else {
+          summaryBanner.style.display = 'none';
+        }
+        
+        // Render offers if present
         if (ti && ti.bestOffer) {
           bestText.textContent = `${ti.bestOffer.name} – ${ti.bestOffer.amount.toFixed(2)} ${ti.bestOffer.currency}`;
           bestWrap.style.display = '';

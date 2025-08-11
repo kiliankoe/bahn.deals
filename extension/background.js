@@ -240,18 +240,138 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
       };
       try {
         const n = route?.nodes?.length || 0;
-        const limit = 6; // prototype cap
-        await progress({ phase: 'segments-start', totalNodes: n, cap: limit });
-        let count = 0;
-        for (let i = 0; i < n && count < limit; i++) {
-          for (let j = i + 1; j < n && count < limit; j++) {
-            const r = await priceOne(i, j);
-            if (r) segments.push(r);
-            count++;
+        const total = n > 1 ? (n * (n - 1)) / 2 : 0;
+        await progress({ phase: 'segments-start', totalNodes: n, total });
+        const tasks = [];
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) tasks.push([i, j]);
+        }
+        let done = 0;
+        const concurrency = 3; // Increased for better throughput
+        const throttleMs = 100; // Reduced throttle for faster processing
+        const runNext = async () => {
+          while (tasks.length > 0) {
+            const t = tasks.shift();
+            if (!t) break;
+            const [i, j] = t;
+            try {
+              const r = await priceOne(i, j);
+              if (r) segments.push(r);
+            } catch (e) {
+              console.warn(`[segments] pricing ${i}->${j} failed:`, e);
+            } finally {
+              done++;
+              // Report progress more frequently for large segment counts
+              if (done % Math.max(1, Math.floor(total / 20)) === 0 || done === total) {
+                await progress({ phase: 'segments-progress', done, total });
+              }
+            }
+            // Throttle between requests
+            if (tasks.length > 0) {
+              await new Promise(res => setTimeout(res, throttleMs));
+            }
+          }
+        };
+        await Promise.all(Array.from({ length: concurrency }, runNext));
+        await progress({ phase: 'segments-done', produced: segments.length, total });
+        await progress({ phase: 'dp-start', validSegments: segments.filter(s => s?.bestOffer?.amount != null).length });
+      } catch (e) {
+        console.error('[segments] processing error:', e);
+      }
+
+      // Compute DP for best split across all priced segments
+      let split = null;
+      try {
+        const n = route?.nodes?.length || 0;
+        if (n >= 2) {
+          // Build cost matrix from all successfully priced segments
+          const cost = new Map();
+          const segmentMap = new Map(); // Store full segment info for reconstruction
+          let validSegments = 0;
+          for (const s of segments) {
+            if (s?.bestOffer?.amount != null && s.fromIdx != null && s.toIdx != null) {
+              const key = `${s.fromIdx}-${s.toIdx}`;
+              cost.set(key, s.bestOffer.amount);
+              segmentMap.set(key, s);
+              validSegments++;
+            }
+          }
+          
+          console.debug(`[DP] processing ${n} nodes with ${validSegments} valid segments`);
+          
+          // Dynamic Programming to find minimum cost path
+          const INF = 1e15;
+          const dp = Array(n).fill(INF);
+          const prev = Array(n).fill(-1);
+          dp[0] = 0;
+          
+          for (let j = 1; j < n; j++) {
+            for (let i = 0; i < j; i++) {
+              const key = `${i}-${j}`;
+              const c = cost.get(key);
+              if (c == null) continue;
+              if (dp[i] + c < dp[j]) {
+                dp[j] = dp[i] + c;
+                prev[j] = i;
+              }
+            }
+          }
+          
+          // Reconstruct path if solution exists
+          if (dp[n - 1] < INF) {
+            const chosen = [];
+            let cur = n - 1;
+            let totalCost = 0;
+            
+            while (cur > 0 && prev[cur] >= 0) {
+              const i = prev[cur];
+              const j = cur;
+              const key = `${i}-${j}`;
+              const segment = segmentMap.get(key);
+              
+              if (segment) {
+                chosen.push({
+                  fromIdx: i,
+                  toIdx: j,
+                  amount: segment.bestOffer.amount,
+                  currency: segment.bestOffer.currency || 'EUR',
+                  from: segment.from,
+                  to: segment.to
+                });
+                totalCost += segment.bestOffer.amount;
+              }
+              cur = i;
+            }
+            
+            chosen.reverse();
+            split = {
+              total: totalCost,
+              currency: 'EUR',
+              segments: chosen,
+              dpCost: dp[n - 1], // For debugging
+              validSegmentsUsed: chosen.length,
+              totalValidSegments: validSegments
+            };
+            
+            console.debug(`[DP] found solution: ${chosen.length} segments, total cost ${totalCost}`);
+            await progress({ phase: 'dp-done', segmentsUsed: chosen.length, totalCost });
+          } else {
+            console.warn(`[DP] no valid path found from start to end (${validSegments} segments available)`);
+            split = {
+              error: 'no-path-found',
+              totalValidSegments: validSegments,
+              nodeCount: n
+            };
+            await progress({ phase: 'dp-done', error: 'no-path-found' });
           }
         }
-        await progress({ phase: 'segments-done', produced: segments.length });
-      } catch {}
+      } catch (e) {
+        console.error('[DP] optimization error:', e);
+        split = {
+          error: String(e?.message || e),
+          segmentsCount: segments.length
+        };
+      }
 
       return {
         ok: true,
@@ -266,6 +386,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
           ticketsInfo,
           route,
           segments,
+          split,
         },
       };
     } catch (err) {
