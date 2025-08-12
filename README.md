@@ -2,7 +2,7 @@
 
 A Firefox WebExtension that finds cheaper split-ticket combinations for Deutsche Bahn journeys by analyzing all possible partial segments of your trip.
 
-Very much inspired by [YouTube: Wie ich meine Bahnfart 84% günstiger bekomme (eigene App)](https://www.youtube.com/watch?v=SxKtI8f5QTU).
+Very much inspired by [YouTube: Wie ich meine Bahnfart 84% günstiger bekomme (eigene App)](https://www.youtube.com/watch?v=SxKtI8f5QTU) from [@l2xu](https://github.com/l2xu), watch the video, it's good!
 I felt turning this into a browser extension instead is the most maintainable way forward, since it takes pressure off of anyone hosting this and moves the complexity to the client-side.
 
 ## Overview
