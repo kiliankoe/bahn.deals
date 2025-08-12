@@ -12,10 +12,42 @@
       font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       margin: 16px;
       color: #111;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
     }
 
     header {
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* Main layout container */
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 500px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Responsive layout */
+    @media (max-width: 1100px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .right-column {
+        order: -1; /* Move map above analysis on mobile */
+      }
+    }
+
+    .left-column {
+      min-width: 0; /* Prevent grid blowout */
+    }
+
+    .right-column {
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 32px);
     }
 
     .muted {
@@ -135,13 +167,29 @@
       border: 1px solid #e1e1e1;
       border-radius: 8px;
       padding: 16px;
-      margin-bottom: 16px;
+      margin-bottom: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     #map {
-      height: 400px;
+      flex: 1;
+      min-height: 400px;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 1100px) {
+      #map-container {
+        height: auto;
+        margin-bottom: 16px;
+      }
+      
+      #map {
+        height: 400px;
+        min-height: auto;
+      }
     }
 
     /* Collapsible segments styling */
@@ -312,20 +360,9 @@
     <div class="route" id="route">Analyse</div>
     <div class="muted small" id="meta"></div>
   </header>
-  <section class="card" id="map-container" style="display:none;">
-    <div class="options-title">Streckenübersicht</div>
-    <div id="map"></div>
-    <div id="map-info" class="small muted" style="margin-top:8px;"></div>
-  </section>
-  <section class="card">
-    <div class="progress" id="progress">Warte auf Verbindungsdaten …</div>
-    <div id="details" class="small"></div>
-    <div id="progress-log-container">
-      <div id="progress-log-header" class="small">Detaillierte Logs anzeigen</div>
-      <div id="progress-log" class="small" style="max-height: 180px; overflow:auto; border-top:1px solid #eee; padding-top:8px; display:none;"></div>
-    </div>
-  </section>
-  <section class="card">
+  <div class="main-container">
+    <div class="left-column">
+      <section class="card">
     <div class="options-section">
       <div class="options-title">Reiseoptionen</div>
       <div class="row" style="gap:20px;flex-wrap:wrap;">
@@ -401,6 +438,23 @@
       <pre id="result" class="small" style="white-space:pre-wrap"></pre>
     </details>
   </section>
+    </div>
+    <div class="right-column">
+      <section class="card" id="map-container" style="display:none;">
+        <div class="options-title">Streckenübersicht</div>
+        <div id="map"></div>
+        <div id="map-info" class="small muted" style="margin-top:8px;"></div>
+      </section>
+      <section class="card" style="margin-top: 16px;">
+        <div class="progress" id="progress">Warte auf Verbindungsdaten …</div>
+        <div id="details" class="small"></div>
+        <div id="progress-log-container">
+          <div id="progress-log-header" class="small">Detaillierte Logs anzeigen</div>
+          <div id="progress-log" class="small" style="max-height: 180px; overflow:auto; border-top:1px solid #eee; padding-top:8px; display:none;"></div>
+        </div>
+      </section>
+    </div>
+  </div>
   <script src="../vendor/leaflet.js"></script>
   <script src="../vendor/maplibre-gl.js"></script>
   <script src="../vendor/leaflet-maplibre-gl.js"></script>
