@@ -1,4 +1,4 @@
-# bahn.deals 🚂💰
+# bahn.deals
 
 A Firefox WebExtension that finds cheaper split-ticket combinations for Deutsche Bahn journeys by analyzing all possible partial segments of your trip.
 
