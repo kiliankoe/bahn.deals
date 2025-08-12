@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>bahn.deals – Analyse</title>
+  </head>
+  <body>
+    <header>
+      <div class="route" id="route">Analyse</div>
+      <div class="muted small" id="meta"></div>
+    </header>
+    <div class="main-container">
+      <div class="left-column">
+        <section class="card">
+          <div class="options-section">
+            <div class="options-title">Reiseoptionen</div>
+            <div class="row" style="gap:20px;flex-wrap:wrap;">
+              <div>
+                <label for="class-select" class="small muted">Klasse:</label>
+                <select id="class-select" style="margin-left:6px;">
+                  <option value="2">2. Klasse</option>
+                  <option value="1">1. Klasse</option>
+                </select>
+              </div>
+              <div>
+                <label for="age-input" class="small muted">Alter:</label>
+                <input type="number" id="age-input" min="0" max="120" value="30" style="width:60px;margin-left:6px;" />
+              </div>
+              <div>
+                <label for="bahncard-select" class="small muted">BahnCard:</label>
+                <select id="bahncard-select" style="margin-left:6px;">
+                  <option value="none">Keine</option>
+                  <option value="bc25">BahnCard 25</option>
+                  <option value="bc50">BahnCard 50</option>
+                  <option value="bc100">BahnCard 100</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;">
+                <label class="small muted" style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" id="dticket-check" />
+                  Deutschlandticket
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="justify-content:space-between;align-items:center;">
+            <div style="font-size:18px;font-weight:600;color:#282d37;">Analyse</div>
+            <div><button id="run">Analyse starten</button></div>
+          </div>
+          <div id="summary-banner" class="card" style="display:none;">
+            <div style="margin-bottom:8px;"><strong>Aufteilungsanalyse</strong></div>
+            <div class="row" style="gap:24px;flex-wrap:wrap;">
+              <div>
+                <div class="small muted">Originalpreis:</div>
+                <div id="original-price" style="font-weight:600;">-</div>
+              </div>
+              <div>
+                <div class="small muted">Beste Aufteilung:</div>
+                <div id="best-split-price" style="font-weight:600;">-</div>
+              </div>
+              <div>
+                <div class="small muted">Ersparnis:</div>
+                <div id="savings" style="font-weight:600;">-</div>
+              </div>
+            </div>
+            <div id="chosen-segments" style="margin-top:8px;display:none;">
+              <div class="small muted" style="margin-bottom:4px;">Gewählte Segmente:</div>
+              <div id="chosen-segments-list" class="small"></div>
+              <button class="copy-button" id="copy-segments" style="margin-top:8px;display:none;">Segmente kopieren</button>
+            </div>
+          </div>
+          <div id="best-offer" class="row" style="gap:16px;align-items:center;display:none;">
+            <div><strong>Günstigstes Angebot:</strong></div>
+            <div id="best-offer-text"></div>
+          </div>
+          <div id="offers-list" style="margin-top:8px;display:none;">
+            <div class="small muted" style="margin-bottom:4px;">Weitere Angebote:</div>
+            <ul id="offers"></ul>
+          </div>
+          <div id="segments-list" style="margin-top:12px;display:none;">
+            <div class="small muted" style="margin-bottom:8px;">Verfügbare Segmentpreise:</div>
+            <div id="segments"></div>
+          </div>
+          <details style="margin-top:8px;">
+            <summary class="small">Rohdaten</summary>
+            <pre id="result" class="small" style="white-space:pre-wrap"></pre>
+          </details>
+        </section>
+      </div>
+      <div class="right-column">
+        <section class="card" id="map-container" style="display:none;">
+          <div class="options-title">Streckenübersicht</div>
+          <div id="map"></div>
+          <div id="map-info" class="small muted" style="margin-top:8px;"></div>
+        </section>
+        <section class="card" style="margin-top: 16px;">
+          <div class="progress" id="progress">Warte auf Verbindungsdaten …</div>
+          <div id="details" class="small"></div>
+          <div id="progress-log-container">
+            <div id="progress-log-header" class="small">Detaillierte Logs anzeigen</div>
+            <div id="progress-log" class="small" style="max-height: 180px; overflow:auto; border-top:1px solid #eee; padding-top:8px; display:none;"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script type="module" src="./analysis.ts"></script>
+  </body>
+  </html>
+

@@ -2,3 +2,4 @@
 node_modules/
 *.log
 extension/background/dist/
+dist
