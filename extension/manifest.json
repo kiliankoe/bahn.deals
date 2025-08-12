@@ -22,15 +22,11 @@
   ],
   "content_scripts": [
     {
-      "matches": [
-        "https://www.bahn.de/buchung/fahrplan/suche*"
-      ],
+      "matches": ["https://www.bahn.de/buchung/fahrplan/suche*"],
       "js": ["content/overview-menu.js"],
       "run_at": "document_idle"
     }
   ],
-  "web_accessible_resources": [
-    "vendor/*"
-  ],
+  "web_accessible_resources": ["vendor/*"],
   "content_security_policy": "script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; object-src 'none'"
 }

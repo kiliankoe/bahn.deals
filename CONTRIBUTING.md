@@ -7,9 +7,23 @@ bahn.deals is a Firefox WebExtension that helps users find cheaper split-ticket 
 ## Architecture
 
 ### Extension Structure (MV2)
-- **background.js** + **dbnav-lite.js**: Background scripts handling API calls, session management, and journey analysis
+- **background.js**: Generated from modular source files (see Development section)
+- **dbnav-lite.js**: Deutsche Bahn API wrapper
 - **content/overview-menu.js**: Content script injecting "Find cheapest split" option into bahn.de search results
 - **pages/**: Extension UI pages (popup, options, analysis)
+
+### Project Structure
+
+#### Background Services (Modular source files)
+- `extension/background/services/` - Service classes (session, options, route, pricing, optimizer, analysis)
+- `extension/background/utils/` - Utility functions (date handling, coordinate processing)
+
+#### UI Components (ES6 Modules)
+- `extension/pages/components/` - UI components (map, progress tracker, results, options form)
+- `extension/pages/utils/` - UI utilities (formatting helpers)
+
+#### Generated Files
+- `extension/background.js` - Built from modular files (in .gitignore)
 
 ### Key APIs
 - Deutsche Bahn Vendo/Movas APIs via dbnav profile (no API key required)
@@ -26,10 +40,23 @@ bahn.deals is a Firefox WebExtension that helps users find cheaper split-ticket 
 5. Price each segment maintaining exact route/trains
 6. Run dynamic programming optimization to find cheapest combination
 
-## Development Commands
+## Development Workflow
 
-There's no build process, it's just plain JS.
-Load the unpacked extension in Firefox via `about:debugging`.
+### Building the Extension
+
+The background script is generated from modular source files:
+
+```bash
+make build-background
+```
+
+This creates `extension/background.js` from the files in `extension/background/`.
+
+### Development Steps
+
+1. Edit the modular source files in `extension/background/`
+2. Run `make build-background` to rebuild
+3. Load/reload the extension in Firefox via `about:debugging`
 
 ## Important Implementation Details
 

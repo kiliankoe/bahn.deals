@@ -19,6 +19,9 @@ jobs:
       id: get_tag
       run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+    - name: Build extension
+      run: make build-background
+
     - name: Create extension package
       run: |
         cd extension
