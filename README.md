@@ -27,7 +27,7 @@ When booking train tickets on bahn.de, the end-to-end price isn't always the che
 
 ### Pre-built
 
-1. Click [here](https://github.com/kiliankoe/bahn.deals/releases) to view releases
+1. Click [here](https://github.com/kiliankoe/bahn.deals/releases/latest) to view the latest release
 2. Download `bahn-deals-$LATESTVERSION.xpi` from the latest release
 3. Navigate to `about:debugging` in Firefox
 4. Click "This Firefox" in the sidebar
