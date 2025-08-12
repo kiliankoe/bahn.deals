@@ -77,11 +77,9 @@ The extension uses Deutsche Bahn's internal APIs (via the vendored `db-vendo-cli
 - Cannot book tickets directly - provides information for manual booking
 - Rate limits may cause slower analysis for very long routes
 
-### Development Setup
+## Contributing
 
-1. Make changes to files in the `extension/` directory
-2. Reload the extension in `about:debugging`
-3. Test on bahn.de
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Disclaimer
 
