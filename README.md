@@ -9,21 +9,18 @@ I felt turning this into a browser extension instead is the most maintainable wa
 
 When booking train tickets on bahn.de, the end-to-end price isn't always the cheapest option. By splitting your journey into multiple segments, you can often save money while taking the exact same trains. This extension automates the process of finding the optimal split-ticket combination.
 
+![screenshot](images/screenshot.png)
+
 ## Usage
 
 1. Search for a journey on [bahn.de](https://www.bahn.de)
-
 2. Click the 3-dot menu (⋮) on any journey in the search results
-
 3. Select "Günstigste Aufteilung suchen" from the menu
-
 4. Configure your preferences (optional):
    - Travel class (1st/2nd)
    - BahnCard discount
    - Age (affects pricing)
-
 5. Click "Analyse starten" to begin the analysis
-
 6. Book the cheapest possible ticket!
 
 ## Installation
