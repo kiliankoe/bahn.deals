@@ -198,8 +198,18 @@ async function fetchInitialRoute(token) {
           }
         }
         
-        // Count changes
-        const changes = res.route.legs ? res.route.legs.length - 1 : 0;
+        // Count changes by checking where train labels change
+        let changes = 0;
+        if (res.route.nodes && res.route.nodes.length > 0) {
+          let lastTrainLabel = res.route.nodes[0]?.trainLabel;
+          for (let i = 1; i < res.route.nodes.length; i++) {
+            const currentLabel = res.route.nodes[i]?.trainLabel;
+            if (currentLabel && currentLabel !== lastTrainLabel) {
+              changes++;
+              lastTrainLabel = currentLabel;
+            }
+          }
+        }
         
         // Create journey info section
         let journeyInfo = document.querySelector('.journey-info');
@@ -414,8 +424,18 @@ async function main() {
             }
           }
           
-          // Count changes
-          const changes = msg.route.legs ? msg.route.legs.length - 1 : 0;
+          // Count changes by checking where train labels change
+          let changes = 0;
+          if (msg.route.nodes && msg.route.nodes.length > 0) {
+            let lastTrainLabel = msg.route.nodes[0]?.trainLabel;
+            for (let i = 1; i < msg.route.nodes.length; i++) {
+              const currentLabel = msg.route.nodes[i]?.trainLabel;
+              if (currentLabel && currentLabel !== lastTrainLabel) {
+                changes++;
+                lastTrainLabel = currentLabel;
+              }
+            }
+          }
           
           // Create journey info section if it doesn't exist
           let journeyInfo = document.querySelector('.journey-info');
