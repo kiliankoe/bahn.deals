@@ -34,7 +34,7 @@ export class AnalysisService {
 
       // Parse date/time and resolve stations
       const depDateTime = DateUtils.parseDateTime(selection);
-      const { fromEva, toEva } = await this.resolveStations(selection);
+      const { fromEva, toEva } = await this.routeService.resolveStations(selection);
 
       if (!fromEva || !toEva) {
         return { ok: false, error: "resolve-failed", selection };
@@ -109,7 +109,7 @@ export class AnalysisService {
     return async (payload) => {
       try {
         await browser.runtime.sendMessage({
-          type: "analysis-progress",
+          type: (self.BD_MSG && self.BD_MSG.ANALYSIS_PROGRESS) || "analysis-progress",
           ...payload,
         });
       } catch {
@@ -118,27 +118,7 @@ export class AnalysisService {
     };
   }
 
-  /**
-   * Resolve station EVA numbers
-   * @param {Object} selection - Selection data
-   * @returns {Object} EVA numbers
-   */
-  async resolveStations(selection) {
-    let fromEva = selection.fromEVA || null;
-    let toEva = selection.toEVA || null;
-
-    if (!fromEva && selection.fromName) {
-      const res = await self.DBNavLite.dbnavLocations(selection.fromName, 5);
-      fromEva = res?.[0]?.evaNr || null;
-    }
-
-    if (!toEva && selection.toName) {
-      const res = await self.DBNavLite.dbnavLocations(selection.toName, 5);
-      toEva = res?.[0]?.evaNr || null;
-    }
-
-    return { fromEva, toEva };
-  }
+  
 
   /**
    * Fetch journeys

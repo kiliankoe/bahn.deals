@@ -8,7 +8,11 @@
     "default_popup": "pages/popup.html"
   },
   "background": {
-    "scripts": ["bg/dbnav-lite.js", "background.js"],
+    "scripts": [
+      "common/messages.js",
+      "background/lib/dbnav-lite.js",
+      "background/dist/index.js"
+    ],
     "persistent": true
   },
   "permissions": [
@@ -16,14 +20,13 @@
     "tabs",
     "https://www.bahn.de/*",
     "https://app.vendo.noncd.db.de/*",
-    "https://int.bahn.de/*",
     "https://tiles.openfreemap.org/*",
     "https://tile.openstreetmap.org/*"
   ],
   "content_scripts": [
     {
       "matches": ["https://www.bahn.de/buchung/fahrplan/suche*"],
-      "js": ["content/overview-menu.js"],
+      "js": ["common/messages.js", "content/overview-menu.js"],
       "run_at": "document_idle"
     }
   ],

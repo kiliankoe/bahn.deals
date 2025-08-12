@@ -146,7 +146,7 @@ const injectIntoMenu = (menuRoot, connectionRoot) => {
     ev.stopPropagation();
     const selection = extractSelection(connectionRoot);
     try {
-      await EXT.runtime.sendMessage({ type: "open-analysis", selection });
+      await EXT.runtime.sendMessage({ type: (self.BD_MSG && BD_MSG.OPEN_ANALYSIS) || "open-analysis", selection });
     } catch {}
   });
   ul.appendChild(li);

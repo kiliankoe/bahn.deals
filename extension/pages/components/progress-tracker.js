@@ -49,7 +49,7 @@ export class ProgressTracker {
    * @param {Object} msg - Progress message
    */
   handleProgress(msg) {
-    if (msg?.type !== "analysis-progress") return;
+    if (msg?.type !== ((self.BD_MSG && BD_MSG.ANALYSIS_PROGRESS) || 'analysis-progress')) return;
 
     const handler = this.messageHandlers[msg.phase];
     if (handler) {

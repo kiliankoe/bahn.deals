@@ -64,7 +64,7 @@ class AnalysisController {
 
     try {
       const res = await this.EXT.runtime.sendMessage({
-        type: "get-analysis-selection",
+        type: (self.BD_MSG && BD_MSG.GET_ANALYSIS_SELECTION) || "get-analysis-selection",
         token: this.token,
       });
       return res?.selection || null;
@@ -132,7 +132,7 @@ class AnalysisController {
 
     try {
       const res = await this.EXT.runtime.sendMessage({
-        type: "fetch-route-only",
+        type: (self.BD_MSG && BD_MSG.FETCH_ROUTE_ONLY) || "fetch-route-only",
         token: this.token,
       });
 
@@ -203,7 +203,7 @@ class AnalysisController {
 
     try {
       const res = await this.EXT.runtime.sendMessage({
-        type: "start-analysis",
+        type: (self.BD_MSG && BD_MSG.START_ANALYSIS) || "start-analysis",
         token: this.token,
         options,
       });
