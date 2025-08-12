@@ -16,7 +16,9 @@
     "tabs",
     "https://www.bahn.de/*",
     "https://app.vendo.noncd.db.de/*",
-    "https://int.bahn.de/*"
+    "https://int.bahn.de/*",
+    "https://tiles.openfreemap.org/*",
+    "https://tile.openstreetmap.org/*"
   ],
   "content_scripts": [
     {
@@ -26,5 +28,9 @@
       "js": ["content/overview-menu.js"],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "web_accessible_resources": [
+    "vendor/*"
+  ],
+  "content_security_policy": "script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; object-src 'none'"
 }
