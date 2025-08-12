@@ -2,6 +2,9 @@
 
 A Firefox WebExtension that finds cheaper split-ticket combinations for Deutsche Bahn journeys by analyzing all possible partial segments of your trip.
 
+Very much inspired by [YouTube: Wie ich meine Bahnfart 84% günstiger bekomme (eigene App)](https://www.youtube.com/watch?v=SxKtI8f5QTU).
+I felt turning this into a browser extension instead is the most maintainable way forward, since it takes pressure off of anyone hosting this and moves the complexity to the client-side.
+
 ## Overview
 
 When booking train tickets on bahn.de, the end-to-end price isn't always the cheapest option. By splitting your journey into multiple segments, you can often save money while taking the exact same trains. This extension automates the process of finding the optimal split-ticket combination.
@@ -25,6 +28,17 @@ When booking train tickets on bahn.de, the end-to-end price isn't always the che
 
 ## Installation
 
+### Pre-built
+
+1. Click [here](https://github.com/kiliankoe/bahn.deals/releases) to view releases
+2. Download the `bahn-deals-${{ steps.get_tag.outputs.TAG_NAME }}.xpi` from the latest release
+3. Navigate to `about:debugging` in Firefox
+4. Click "This Firefox" in the sidebar
+5. Click "Load Temporary Add-on..."
+6. Select the downloaded .xpi file
+
+For permanent installation, the extension will need to be signed by Mozilla. That is not yet the case.
+
 ### From Source (Development)
 
 1. Clone this repository:
@@ -32,16 +46,12 @@ When booking train tickets on bahn.de, the end-to-end price isn't always the che
    git clone https://github.com/kiliankoe/bahn.deals.git
    cd bahn.deals
    ```
-
 2. Open Firefox and navigate to `about:debugging`
-
 3. Click "This Firefox" in the left sidebar
-
-4. Click "Load Temporary Add-on"
-
+4. Click "Load Temporary Add-on..."
 5. Navigate to the `extension` folder and select `manifest.json`
 
-The extension is now loaded and ready to use!
+Don't forget to press reload there when changing source files!
 
 ## How It Works
 

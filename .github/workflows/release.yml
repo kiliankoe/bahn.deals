@@ -1,0 +1,40 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get tag name
+      id: get_tag
+      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create extension package
+      run: |
+        cd extension
+        # Create the .xpi file (which is just a zip file)
+        zip -r ../bahn-deals-${{ steps.get_tag.outputs.TAG_NAME }}.xpi . \
+          -x "*.git*" \
+          -x "*.DS_Store"
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+        name: bahn.deals ${{ steps.get_tag.outputs.TAG_NAME }}
+        draft: false
+        # Mark as prerelease if tag contains hyphen (e.g., v1.0.0-beta)
+        prerelease: ${{ contains(steps.get_tag.outputs.TAG_NAME, '-') }}
+        files: |
+          bahn-deals-${{ steps.get_tag.outputs.TAG_NAME }}.xpi
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
