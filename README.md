@@ -38,17 +38,13 @@ For permanent installation, the extension will need to be signed by Mozilla. Tha
 
 ### From Source (Development)
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/kiliankoe/bahn.deals.git
-   cd bahn.deals
-   ```
+1. Clone this repository
 2. Open Firefox and navigate to `about:debugging`
 3. Click "This Firefox" in the left sidebar
 4. Click "Load Temporary Add-on..."
 5. Navigate to the `extension` folder and select `manifest.json`
 
-Don't forget to press reload there when changing source files!
+Don't forget to press reload on the extension in `about:debugging` when changing source files!
 
 ## How It Works
 
